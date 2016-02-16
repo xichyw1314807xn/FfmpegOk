@@ -8,8 +8,8 @@
 #include "PictureDecodcEncodec.h"
 
 
-#define AUDIO_DECODC 1
-#define VIDEO_DECODC 0
+#define AUDIO_DECODC 0
+#define VIDEO_DECODC 1
 #define PICTURE_DECODC 0
 
 int _tmain(int argc, _TCHAR* argv[])
