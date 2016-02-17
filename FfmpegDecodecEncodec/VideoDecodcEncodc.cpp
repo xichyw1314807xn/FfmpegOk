@@ -26,6 +26,10 @@ extern "C"
 #endif
 #endif
 
+
+//Out put yuv420p
+#define OUTPUT_YUV420P 1
+
 //Refresh Event
 #define SFM_REFRESH_EVENT  (SDL_USEREVENT + 1)
 
@@ -65,6 +69,8 @@ VideoDecodcEncodc::~VideoDecodcEncodc()
 {
 }
 
+
+
 void VideoDecodcEncodc::decodec()
 {
 
@@ -75,7 +81,7 @@ void VideoDecodcEncodc::decodec()
 	AVFrame	*pFrame, *pFrameYUV;
 	uint8_t *out_buffer;
 	AVPacket *packet;
-	int ret, got_picture;
+	int ret, got_picture,y_size;
 
 	//------------SDL----------------
 	int screen_w, screen_h;
@@ -88,6 +94,7 @@ void VideoDecodcEncodc::decodec()
 
 	struct SwsContext *img_convert_ctx;
 
+	FILE *pFile =NULL;
 	//char filepath[]="bigbuckbunny_480x272.h265";
 	char filepath[] = "Titanic.ts";
 
@@ -123,6 +130,9 @@ void VideoDecodcEncodc::decodec()
 		printf("Could not open codec.\n");
 		return ;
 	}
+#if OUTPUT_YUV420P
+	pFile = fopen("output.yuv","wb+");
+#endif
 	pFrame = av_frame_alloc();
 	pFrameYUV = av_frame_alloc();
 	out_buffer = (uint8_t *)av_malloc(avpicture_get_size(PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height));
@@ -187,6 +197,14 @@ void VideoDecodcEncodc::decodec()
 			}
 			if (got_picture){
 				sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameYUV->data, pFrameYUV->linesize);
+
+#if OUTPUT_YUV420P
+				y_size = pCodecCtx->width*pCodecCtx->height;
+				fwrite(pFrameYUV->data[0], 1, y_size, pFile);    //Y 
+				fwrite(pFrameYUV->data[1], 1, y_size / 4, pFile);  //U
+				fwrite(pFrameYUV->data[2], 1, y_size / 4, pFile);  //V
+
+#endif
 				//SDL---------------------------
 				SDL_UpdateTexture(sdlTexture, NULL, pFrameYUV->data[0], pFrameYUV->linesize[0]);
 				SDL_RenderClear(sdlRenderer);
